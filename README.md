@@ -46,7 +46,7 @@ Examples:
 - Main
 - Test Wallet
 - Research
-- Brother 1
+- Test Wallet 2
 
 ## Address Book
 Save frequently used wallet addresses with:
