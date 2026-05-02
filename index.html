@@ -36,18 +36,52 @@
           </label>
         </div>
 
+        <div class="grid">
+          <label>
+            Action
+            <select id="action" required>
+              <option value="wallet setup">wallet setup</option>
+              <option value="faucet">faucet</option>
+              <option value="transfer">transfer</option>
+              <option value="return transfer">return transfer</option>
+              <option value="explorer verification">explorer verification</option>
+            </select>
+          </label>
+
+          <label>
+            Status
+            <select id="status" required>
+              <option value="completed">completed</option>
+              <option value="pending">pending</option>
+              <option value="failed">failed</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="grid">
+          <label>
+            Network
+            <input type="text" id="network" value="Arc Testnet" required />
+          </label>
+
+          <label>
+            Tx Hash
+            <input type="text" id="txHash" placeholder="0x..." />
+          </label>
+        </div>
+
         <label>
           Wallet
           <input type="text" id="wallet" placeholder="0x..." required />
         </label>
 
         <label>
-          What did you do
+          Notes
           <textarea id="details" rows="4" placeholder="Describe your contribution" required></textarea>
         </label>
 
         <label>
-          Proof link
+          Proof URL
           <input type="url" id="proof" placeholder="https://..." />
         </label>
 
