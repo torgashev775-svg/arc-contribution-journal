@@ -11,15 +11,70 @@
     <header class="hero">
       <div>
         <h1>Arc Contribution Journal</h1>
-        <p>Track contributions, proof links, and wallet activity.</p>
+        <p>Track wallets, proofs, and report-ready activity logs.</p>
       </div>
+
       <div class="hero-actions">
         <button id="importBtn" type="button">Import JSON</button>
         <button id="exportBtn" type="button">Export JSON</button>
         <button id="exportCsvBtn" type="button">Export CSV</button>
+        <button id="exportReportBtn" type="button">Export Report MD</button>
         <input id="importInput" type="file" accept="application/json" hidden />
       </div>
     </header>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2>Workspaces</h2>
+        <div class="hero-actions">
+          <select id="workspaceSelect"></select>
+          <input id="newWorkspaceName" type="text" placeholder="New workspace name" />
+          <button id="addWorkspaceBtn" type="button">Add Workspace</button>
+          <button id="deleteWorkspaceBtn" type="button" class="danger-ghost">Delete Workspace</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2>Address Book</h2>
+      </div>
+
+      <form id="addressForm" class="form">
+        <input type="hidden" id="addressEditId" />
+
+        <div class="grid">
+          <label>
+            Label
+            <input type="text" id="addressLabel" placeholder="Main Wallet" required />
+          </label>
+
+          <label>
+            Address
+            <input type="text" id="addressValue" placeholder="0x..." required />
+          </label>
+        </div>
+
+        <div class="grid">
+          <label>
+            Network
+            <input type="text" id="addressNetwork" value="Arc Testnet" required />
+          </label>
+
+          <label>
+            Notes
+            <input type="text" id="addressNotes" placeholder="Optional note" />
+          </label>
+        </div>
+
+        <div class="hero-actions">
+          <button id="saveAddressBtn" type="submit">Add Address</button>
+          <button id="cancelAddressEditBtn" type="button" hidden>Cancel Edit</button>
+        </div>
+      </form>
+
+      <div id="addressList" class="entries"></div>
+    </section>
 
     <section class="card">
       <form id="entryForm" class="form">
@@ -27,10 +82,19 @@
 
         <div class="grid">
           <label>
+            Saved Wallet
+            <select id="savedWallet">
+              <option value="">Select saved wallet</option>
+            </select>
+          </label>
+
+          <label>
             Date
             <input type="date" id="date" required />
           </label>
+        </div>
 
+        <div class="grid">
           <label>
             Category
             <select id="category" required>
@@ -41,9 +105,7 @@
               <option value="other">Other</option>
             </select>
           </label>
-        </div>
 
-        <div class="grid">
           <label>
             Action
             <select id="action" required>
@@ -52,9 +114,12 @@
               <option value="transfer">transfer</option>
               <option value="return transfer">return transfer</option>
               <option value="explorer verification">explorer verification</option>
+              <option value="validation">validation</option>
             </select>
           </label>
+        </div>
 
+        <div class="grid">
           <label>
             Status
             <select id="status" required>
@@ -63,28 +128,28 @@
               <option value="failed">failed</option>
             </select>
           </label>
-        </div>
 
-        <div class="grid">
           <label>
             Network
             <input type="text" id="network" value="Arc Testnet" required />
           </label>
+        </div>
 
+        <div class="grid">
           <label>
             Tx Hash
             <input type="text" id="txHash" placeholder="0x..." />
           </label>
+
+          <label>
+            Wallet
+            <input type="text" id="wallet" placeholder="0x..." required />
+          </label>
         </div>
 
         <label>
-          Wallet
-          <input type="text" id="wallet" placeholder="0x..." required />
-        </label>
-
-        <label>
           Notes
-          <textarea id="details" rows="4" placeholder="Describe your contribution" required></textarea>
+          <textarea id="details" rows="4" placeholder="Describe the activity" required></textarea>
         </label>
 
         <label>
@@ -117,6 +182,7 @@
     <section class="card">
       <div class="toolbar">
         <h2>Entries</h2>
+
         <div class="hero-actions">
           <select id="filterCategory">
             <option value="all">All categories</option>
@@ -139,6 +205,11 @@
           </select>
         </div>
       </div>
+
+      <div class="toolbar toolbar-tight">
+        <p class="muted">Selected for report: <strong id="selectedCount">0</strong></p>
+      </div>
+
       <div id="entries" class="entries"></div>
     </section>
   </main>
