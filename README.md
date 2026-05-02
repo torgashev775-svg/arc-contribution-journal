@@ -12,4 +12,4 @@ A simple tool to track community contributions, wallet activity, and proof links
 - track forum activity
 - track GitHub work
 - keep wallet-linked contribution notes# arc-contribution-journal
-Simple tool to track community contributions, wallet activity, and proof links.
+
