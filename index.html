@@ -13,11 +13,18 @@
         <h1>Arc Contribution Journal</h1>
         <p>Track contributions, proof links, and wallet activity.</p>
       </div>
-      <button id="exportBtn">Export JSON</button>
+      <div class="hero-actions">
+        <button id="importBtn" type="button">Import JSON</button>
+        <button id="exportBtn" type="button">Export JSON</button>
+        <button id="exportCsvBtn" type="button">Export CSV</button>
+        <input id="importInput" type="file" accept="application/json" hidden />
+      </div>
     </header>
 
     <section class="card">
       <form id="entryForm" class="form">
+        <input type="hidden" id="editId" />
+
         <div class="grid">
           <label>
             Date
@@ -85,7 +92,10 @@
           <input type="url" id="proof" placeholder="https://..." />
         </label>
 
-        <button type="submit">Add Entry</button>
+        <div class="hero-actions">
+          <button id="submitBtn" type="submit">Add Entry</button>
+          <button id="cancelEditBtn" type="button" hidden>Cancel Edit</button>
+        </div>
       </form>
     </section>
 
@@ -107,14 +117,27 @@
     <section class="card">
       <div class="toolbar">
         <h2>Entries</h2>
-        <select id="filterCategory">
-          <option value="all">All categories</option>
-          <option value="forum">Forum</option>
-          <option value="github">GitHub</option>
-          <option value="community">Community</option>
-          <option value="event">Event</option>
-          <option value="other">Other</option>
-        </select>
+        <div class="hero-actions">
+          <select id="filterCategory">
+            <option value="all">All categories</option>
+            <option value="forum">Forum</option>
+            <option value="github">GitHub</option>
+            <option value="community">Community</option>
+            <option value="event">Event</option>
+            <option value="other">Other</option>
+          </select>
+
+          <select id="filterStatus">
+            <option value="all">All status</option>
+            <option value="completed">completed</option>
+            <option value="pending">pending</option>
+            <option value="failed">failed</option>
+          </select>
+
+          <select id="filterNetwork">
+            <option value="all">All networks</option>
+          </select>
+        </div>
       </div>
       <div id="entries" class="entries"></div>
     </section>
