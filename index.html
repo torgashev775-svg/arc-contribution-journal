@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arc Contribution Journal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <h1>Arc Contribution Journal</h1>
+        <p>Track contributions, proof links, and wallet activity.</p>
+      </div>
+      <button id="exportBtn">Export JSON</button>
+    </header>
+
+    <section class="card">
+      <form id="entryForm" class="form">
+        <div class="grid">
+          <label>
+            Date
+            <input type="date" id="date" required />
+          </label>
+
+          <label>
+            Category
+            <select id="category" required>
+              <option value="forum">Forum</option>
+              <option value="github">GitHub</option>
+              <option value="community">Community</option>
+              <option value="event">Event</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Wallet
+          <input type="text" id="wallet" placeholder="0x..." required />
+        </label>
+
+        <label>
+          What did you do
+          <textarea id="details" rows="4" placeholder="Describe your contribution" required></textarea>
+        </label>
+
+        <label>
+          Proof link
+          <input type="url" id="proof" placeholder="https://..." />
+        </label>
+
+        <button type="submit">Add Entry</button>
+      </form>
+    </section>
+
+    <section class="stats">
+      <div class="card stat">
+        <span>Total Entries</span>
+        <strong id="totalCount">0</strong>
+      </div>
+      <div class="card stat">
+        <span>This Week</span>
+        <strong id="weekCount">0</strong>
+      </div>
+      <div class="card stat">
+        <span>Main Category</span>
+        <strong id="topCategory">-</strong>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2>Entries</h2>
+        <select id="filterCategory">
+          <option value="all">All categories</option>
+          <option value="forum">Forum</option>
+          <option value="github">GitHub</option>
+          <option value="community">Community</option>
+          <option value="event">Event</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="entries" class="entries"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
