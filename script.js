@@ -1,23 +1,31 @@
-const STORAGE_KEY = "arc_contribution_journal_v4";
+const STORAGE_KEY = "arc_contribution_journal_v5";
 const LEGACY_KEYS = [
+  "arc_contribution_journal_v4",
   "arc_contribution_journal_v3",
   "arc_contribution_journal_v2",
   "arc_contribution_journal_v1"
 ];
 const TX_HASH_RE = /^0x[a-fA-F0-9]{64}$/;
+const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+const EXPLORER_API_URL = "https://testnet.arcscan.app/api";
+const EXPLORER_TX_URL = "https://testnet.arcscan.app/tx/";
 
 const form = document.getElementById("entryForm");
 const addressForm = document.getElementById("addressForm");
 const workspaceForm = document.getElementById("workspaceForm");
+const walletImportForm = document.getElementById("walletImportForm");
 
 const entriesEl = document.getElementById("entries");
 const addressListEl = document.getElementById("addressList");
+const importResultsEl = document.getElementById("importResults");
+const importStatusEl = document.getElementById("importStatus");
 
 const exportBtn = document.getElementById("exportBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
 const exportReportBtn = document.getElementById("exportReportBtn");
 const importBtn = document.getElementById("importBtn");
 const importInput = document.getElementById("importInput");
+const saveImportedBtn = document.getElementById("saveImportedBtn");
 
 const workspaceSelect = document.getElementById("workspaceSelect");
 const newWorkspaceName = document.getElementById("newWorkspaceName");
@@ -59,7 +67,13 @@ const addressFields = {
   notes: document.getElementById("addressNotes")
 };
 
+const walletImportFields = {
+  address: document.getElementById("walletImportAddress"),
+  limit: document.getElementById("walletImportLimit")
+};
+
 const selectedEntryIds = new Set();
+let importedCandidates = [];
 let state = loadState();
 
 setDefaultEntryValues();
@@ -86,6 +100,8 @@ workspaceForm.addEventListener("submit", (e) => {
   state.currentWorkspaceId = workspace.id;
   newWorkspaceName.value = "";
   selectedEntryIds.clear();
+  importedCandidates = [];
+  setImportStatus("");
   saveState();
   resetEntryForm();
   resetAddressForm();
@@ -119,6 +135,8 @@ deleteWorkspaceBtn.addEventListener("click", () => {
   state.addressBook = state.addressBook.filter((item) => item.workspaceId !== workspace.id);
   state.currentWorkspaceId = state.workspaces[0].id;
   selectedEntryIds.clear();
+  importedCandidates = [];
+  setImportStatus("");
   saveState();
   resetEntryForm();
   resetAddressForm();
@@ -137,6 +155,12 @@ addressForm.addEventListener("submit", (e) => {
     notes: addressFields.notes.value.trim(),
     createdAt: addressFields.editId.value ? getAddressCreatedAt(addressFields.editId.value) : Date.now()
   };
+
+  if (!ADDRESS_RE.test(item.address)) {
+    alert("Invalid wallet address.");
+    addressFields.address.focus();
+    return;
+  }
 
   if (addressFields.editId.value) {
     state.addressBook = state.addressBook.map((entry) => (entry.id === item.id ? item : entry));
@@ -159,6 +183,13 @@ form.addEventListener("submit", (e) => {
     return;
   }
 
+  const wallet = fields.wallet.value.trim();
+  if (!ADDRESS_RE.test(wallet)) {
+    alert("Invalid wallet address.");
+    fields.wallet.focus();
+    return;
+  }
+
   const entry = {
     id: fields.editId.value || crypto.randomUUID(),
     workspaceId: state.currentWorkspaceId,
@@ -168,7 +199,7 @@ form.addEventListener("submit", (e) => {
     status: fields.status.value,
     network: fields.network.value.trim(),
     txHash,
-    wallet: fields.wallet.value.trim(),
+    wallet,
     details: fields.details.value.trim(),
     proof: fields.proof.value.trim(),
     createdAt: fields.editId.value ? getEntryCreatedAt(fields.editId.value) : Date.now()
@@ -183,6 +214,87 @@ form.addEventListener("submit", (e) => {
   saveState();
   resetEntryForm();
   render();
+});
+
+walletImportForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const address = walletImportFields.address.value.trim();
+  const limit = Number(walletImportFields.limit.value);
+
+  if (!ADDRESS_RE.test(address)) {
+    alert("Invalid wallet address.");
+    walletImportFields.address.focus();
+    return;
+  }
+
+  saveImportedBtn.disabled = true;
+  importedCandidates = [];
+  renderImportResults();
+  setImportStatus("Loading transactions...");
+
+  try {
+    const txs = await fetchWalletTransactions(address, limit);
+    importedCandidates = txs.map((tx) => mapImportedTransaction(tx, address));
+    setImportStatus(importedCandidates.length ? `Loaded ${importedCandidates.length} transactions.` : "No transactions found.");
+    renderImportResults();
+  } catch (error) {
+    console.error(error);
+    setImportStatus("Could not load transactions from Arcscan.");
+    renderImportResults();
+  }
+});
+
+saveImportedBtn.addEventListener("click", () => {
+  const checkedIds = Array.from(
+    document.querySelectorAll(".import-checkbox:checked")
+  ).map((node) => node.dataset.id);
+
+  if (!checkedIds.length) {
+    alert("Select at least one transaction.");
+    return;
+  }
+
+  const existingTxHashes = new Set(
+    getCurrentEntries()
+      .map((entry) => entry.txHash.toLowerCase())
+      .filter(Boolean)
+  );
+
+  let importedCount = 0;
+
+  for (const candidate of importedCandidates) {
+    if (!checkedIds.includes(candidate.id)) continue;
+    if (existingTxHashes.has(candidate.txHash.toLowerCase())) continue;
+
+    state.entries.unshift({
+      id: crypto.randomUUID(),
+      workspaceId: state.currentWorkspaceId,
+      date: candidate.date,
+      category: candidate.category,
+      action: candidate.action,
+      status: candidate.status,
+      network: candidate.network,
+      txHash: candidate.txHash,
+      wallet: candidate.wallet,
+      details: candidate.details,
+      proof: candidate.proof,
+      createdAt: Date.now()
+    });
+
+    existingTxHashes.add(candidate.txHash.toLowerCase());
+    importedCount += 1;
+  }
+
+  saveState();
+  render();
+
+  if (!importedCount) {
+    alert("No new transactions were imported.");
+    return;
+  }
+
+  setImportStatus(`Imported ${importedCount} transactions.`);
 });
 
 fields.savedWallet.addEventListener("change", () => {
@@ -249,6 +361,7 @@ importInput.addEventListener("change", async (e) => {
     }
 
     state = normalized;
+    importedCandidates = [];
     selectedEntryIds.clear();
     saveState();
     resetEntryForm();
@@ -324,7 +437,7 @@ function normalizeState(raw) {
     }));
 
   return {
-    version: 4,
+    version: 5,
     currentWorkspaceId,
     workspaces,
     addressBook,
@@ -501,6 +614,7 @@ function render() {
   renderStats();
   renderEntries();
   renderSelectedCount();
+  renderImportResults();
 }
 
 function renderWorkspaces() {
@@ -656,6 +770,154 @@ function renderEntries() {
   });
 }
 
+function renderImportResults() {
+  if (!importedCandidates.length) {
+    importResultsEl.innerHTML = '<div class="empty">No imported transactions.</div>';
+    saveImportedBtn.disabled = true;
+    return;
+  }
+
+  const existingTxHashes = new Set(
+    getCurrentEntries().map((entry) => entry.txHash.toLowerCase()).filter(Boolean)
+  );
+
+  importResultsEl.innerHTML = importedCandidates
+    .map((item) => {
+      const duplicate = existingTxHashes.has(item.txHash.toLowerCase());
+      const statusClass = `status-${escapeAttr(item.status)}`;
+
+      return `
+        <article class="entry">
+          <div class="import-card-top">
+            <label class="check-row">
+              <input
+                type="checkbox"
+                class="import-checkbox"
+                data-id="${item.id}"
+                ${duplicate ? "disabled" : "checked"}
+              />
+              <span class="badge">${escapeHtml(item.action)}</span>
+            </label>
+            ${duplicate ? '<span class="badge badge-muted">already imported</span>' : ""}
+          </div>
+
+          <p class="entry-text">${escapeHtml(item.details)}</p>
+
+          <div class="entry-meta">
+            <span>${escapeHtml(item.date)}</span>
+            <span class="status-pill ${statusClass}">${escapeHtml(item.status)}</span>
+            <span>${escapeHtml(shortWallet(item.wallet))}</span>
+            <span class="inline-mono">${escapeHtml(shortHash(item.txHash))}</span>
+            <a href="${escapeAttr(item.proof)}" target="_blank" rel="noreferrer">Open tx</a>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  saveImportedBtn.disabled = !Array.from(
+    document.querySelectorAll(".import-checkbox")
+  ).some((node) => !node.disabled);
+}
+
+async function fetchWalletTransactions(address, limit) {
+  const url = new URL(EXPLORER_API_URL);
+  url.searchParams.set("module", "account");
+  url.searchParams.set("action", "txlist");
+  url.searchParams.set("address", address);
+  url.searchParams.set("page", "1");
+  url.searchParams.set("offset", String(limit));
+  url.searchParams.set("sort", "desc");
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data.result)) {
+    throw new Error("Unexpected response");
+  }
+
+  return data.result;
+}
+
+function mapImportedTransaction(tx, importedAddress) {
+  const address = importedAddress.toLowerCase();
+  const from = String(tx.from || "").toLowerCase();
+  const to = String(tx.to || "").toLowerCase();
+  const txHash = String(tx.hash || "");
+  const status = getImportedStatus(tx);
+  const action = classifyImportedAction(tx, address);
+  const amount = formatTokenAmount(tx.value);
+  const direction =
+    from === address ? "outbound" :
+    to === address ? "inbound" :
+    "related";
+
+  return {
+    id: txHash || crypto.randomUUID(),
+    date: formatDateFromTimestamp(tx.timeStamp),
+    category: "other",
+    action,
+    status,
+    network: "Arc Testnet",
+    txHash,
+    wallet: importedAddress,
+    proof: `${EXPLORER_TX_URL}${txHash}`,
+    details: buildImportedDetails(action, direction, tx, amount)
+  };
+}
+
+function getImportedStatus(tx) {
+  if (String(tx.txreceipt_status || "") === "0" || String(tx.isError || "") === "1") {
+    return "failed";
+  }
+  if (String(tx.txreceipt_status || "") === "1") {
+    return "completed";
+  }
+  return "pending";
+}
+
+function classifyImportedAction(tx, address) {
+  const from = String(tx.from || "").toLowerCase();
+  const to = String(tx.to || "").toLowerCase();
+  const hasInput = tx.input && tx.input !== "0x";
+  const hasValue = String(tx.value || "0") !== "0";
+
+  if (!tx.to) return "contract creation";
+  if (hasInput) return "contract interaction";
+  if (from === address && to !== address) return "transfer out";
+  if (to === address && from !== address) return "transfer in";
+  if (hasValue) return "transfer";
+  return "validation";
+}
+
+function buildImportedDetails(action, direction, tx, amount) {
+  const from = shortWallet(tx.from || "");
+  const to = shortWallet(tx.to || "");
+  const amountLabel = amount === "0" ? "0" : `${amount} USDC`;
+  return `Imported from Arcscan. Action: ${action}. Direction: ${direction}. From ${from} to ${to}. Value: ${amountLabel}.`;
+}
+
+function formatDateFromTimestamp(timestamp) {
+  const seconds = Number(timestamp || 0);
+  if (!seconds) return new Date().toISOString().slice(0, 10);
+  return new Date(seconds * 1000).toISOString().slice(0, 10);
+}
+
+function formatTokenAmount(rawValue) {
+  try {
+    const value = BigInt(rawValue || "0");
+    const divisor = 10n ** 18n;
+    const whole = value / divisor;
+    const fraction = (value % divisor).toString().padStart(18, "0").slice(0, 4).replace(/0+$/, "");
+    return fraction ? `${whole}.${fraction}` : whole.toString();
+  } catch {
+    return "0";
+  }
+}
+
 function renderSelectedCount() {
   const visibleIds = new Set(getCurrentEntries().map((item) => item.id));
   for (const id of [...selectedEntryIds]) {
@@ -739,6 +1001,10 @@ function toCsv(list) {
   ];
 
   return rows.map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+function setImportStatus(message) {
+  importStatusEl.textContent = message;
 }
 
 function shortWallet(wallet) {
