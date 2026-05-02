@@ -223,6 +223,11 @@ button:disabled {
   letter-spacing: 0.04em;
 }
 
+.badge-muted {
+  background: #2b3558;
+  color: var(--muted);
+}
+
 .check-row {
   display: flex;
   align-items: center;
@@ -275,6 +280,25 @@ button:disabled {
   color: var(--failed-text);
 }
 
+.import-status {
+  min-height: 20px;
+  margin-top: 12px;
+}
+
+.import-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inline-mono {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .empty {
   text-align: center;
   padding: 24px 0;
@@ -309,5 +333,9 @@ button:disabled {
   .hero-actions select,
   .hero-actions input {
     width: 100%;
+  }
+
+  .import-card-top {
+    align-items: flex-start;
   }
 }
