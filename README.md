@@ -1,34 +1,36 @@
 # Arc Contribution Journal
 
-Local-first activity tracker for Arc Testnet and multi-wallet workflows.
+Arc Contribution Journal is a local-first tool for documenting Arc Testnet activity, validation runs, and proof-based reports.
+
+It helps organize wallet-related actions, explorer links, transaction references, and session notes in one place, with export options for JSON, CSV, and Markdown.
 
 ## Live Demo
 https://torgashev775-svg.github.io/arc-contribution-journal/
 
-## What It Does
-Arc Contribution Journal helps track wallet activity, proof links, and contribution logs in a structured way.
+## Repository
+https://github.com/torgashev775-svg/arc-contribution-journal
 
-It is designed for:
-- testnet activity tracking
+## Use Cases
+- testnet validation logs
+- wallet activity documentation
 - proof-based reporting
-- multi-wallet organization
-- manual and imported transaction logging
+- local research and tracking
 
 ## Features
-- multi-wallet workspaces
-- address book
+- local-first storage in the browser
+- workspaces for separate validation runs or research contexts
+- address book for saved wallet references
 - manual activity entries
 - Arcscan-based wallet transaction import
-- tx hash and proof link tracking
+- transaction hash and proof link tracking
 - status and network filters
 - JSON import/export
 - CSV export
 - Markdown report export
-- local browser storage
 - entry editing and deletion
 
-## Core Fields
-Each entry can store:
+## Entry Fields
+Each entry can include:
 - date
 - category
 - action
@@ -39,28 +41,10 @@ Each entry can store:
 - notes
 - proof url
 
-## Workspaces
-Use workspaces to separate activity by wallet, role, or account set.
-
-Examples:
-- Main
-- Test Wallet
-- Research
-- Test Wallet 2
-
-## Address Book
-Save frequently used wallet addresses with:
-- label
-- address
-- network
-- notes
-
-Saved addresses can be reused when creating entries.
-
 ## Wallet Import
-The app can load recent wallet transactions from Arcscan and convert them into journal-ready entries.
+The app can load recent transactions for a wallet from Arcscan and convert them into structured journal entries.
 
-Imported data includes:
+Imported fields include:
 - date
 - wallet
 - tx hash
@@ -69,41 +53,33 @@ Imported data includes:
 - inferred action
 - status
 
-## Reports
-Selected entries can be exported as:
+## Exports
+Selected or stored data can be exported as:
 - JSON
 - CSV
 - Markdown report
 
-This makes it easier to reuse activity logs for:
-- forum posts
-- contribution reports
+This can be useful for:
+- validation logs
+- forum summaries
+- contribution notes
 - internal tracking
-- research notes
 
 ## Storage
 All data is stored locally in the browser using `localStorage`.
 
-Notes:
+Important notes:
 - data stays on the current browser/device
 - clearing browser storage removes saved data
 - use JSON export for backup
 
 ## Positioning
-This project is a local proof and activity journal for Arc Testnet workflows.
+This project is a local validation and activity journal for Arc Testnet workflows.
 
-It is not an automated farming tool and does not execute transactions.
+It does not execute transactions and is intended for documentation, proof tracking, and reporting.
 
 ## Stack
 - HTML
 - CSS
 - JavaScript
 - GitHub Pages
-
-## Roadmap
-Possible next improvements:
-- search
-- timeline view
-- richer report builder
-- stronger transaction classification
-- import merge mode
