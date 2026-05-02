@@ -38,6 +38,38 @@
 
     <section class="card">
       <div class="toolbar">
+        <h2>Import From Wallet</h2>
+      </div>
+
+      <form id="walletImportForm" class="form">
+        <div class="grid">
+          <label>
+            Wallet Address
+            <input id="walletImportAddress" type="text" placeholder="0x..." required />
+          </label>
+
+          <label>
+            Limit
+            <select id="walletImportLimit">
+              <option value="10">10 transactions</option>
+              <option value="20" selected>20 transactions</option>
+              <option value="50">50 transactions</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="hero-actions">
+          <button id="fetchWalletBtn" type="submit">Load Transactions</button>
+          <button id="saveImportedBtn" type="button" class="secondary-action" disabled>Save Selected</button>
+        </div>
+      </form>
+
+      <p id="importStatus" class="muted import-status"></p>
+      <div id="importResults" class="entries"></div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
         <h2>Address Book</h2>
       </div>
 
@@ -113,7 +145,11 @@
               <option value="wallet setup">wallet setup</option>
               <option value="faucet">faucet</option>
               <option value="transfer">transfer</option>
+              <option value="transfer in">transfer in</option>
+              <option value="transfer out">transfer out</option>
               <option value="return transfer">return transfer</option>
+              <option value="contract interaction">contract interaction</option>
+              <option value="contract creation">contract creation</option>
               <option value="explorer verification">explorer verification</option>
               <option value="validation">validation</option>
             </select>
