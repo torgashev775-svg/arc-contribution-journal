@@ -14,11 +14,11 @@
         <p>Track wallets, proofs, and report-ready activity logs.</p>
       </div>
 
-      <div class="hero-actions">
-        <button id="importBtn" type="button">Import JSON</button>
-        <button id="exportBtn" type="button">Export JSON</button>
-        <button id="exportCsvBtn" type="button">Export CSV</button>
-        <button id="exportReportBtn" type="button">Export Report MD</button>
+      <div class="hero-actions compact-actions">
+        <button id="importBtn" type="button" class="secondary-action">Import JSON</button>
+        <button id="exportBtn" type="button" class="secondary-action">Export JSON</button>
+        <button id="exportCsvBtn" type="button" class="secondary-action">Export CSV</button>
+        <button id="exportReportBtn" type="button" class="primary-action">Export Report MD</button>
         <input id="importInput" type="file" accept="application/json" hidden />
       </div>
     </header>
@@ -26,13 +26,14 @@
     <section class="card">
       <div class="toolbar">
         <h2>Workspaces</h2>
-        <div class="hero-actions">
-          <select id="workspaceSelect"></select>
-          <input id="newWorkspaceName" type="text" placeholder="New workspace name" />
-          <button id="addWorkspaceBtn" type="button">Add Workspace</button>
-          <button id="deleteWorkspaceBtn" type="button" class="danger-ghost">Delete Workspace</button>
-        </div>
       </div>
+
+      <form id="workspaceForm" class="workspace-row">
+        <select id="workspaceSelect"></select>
+        <input id="newWorkspaceName" type="text" placeholder="New workspace name" />
+        <button id="addWorkspaceBtn" type="submit">Add Workspace</button>
+        <button id="deleteWorkspaceBtn" type="button" class="danger-ghost">Delete Workspace</button>
+      </form>
     </section>
 
     <section class="card">
