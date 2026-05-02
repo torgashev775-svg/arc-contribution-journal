@@ -1,4 +1,4 @@
-const STORAGE_KEY = "arc_contribution_journal_v1";
+const STORAGE_KEY = "arc_contribution_journal_v2";
 
 const form = document.getElementById("entryForm");
 const entriesEl = document.getElementById("entries");
@@ -11,6 +11,10 @@ const topCategory = document.getElementById("topCategory");
 const fields = {
   date: document.getElementById("date"),
   category: document.getElementById("category"),
+  action: document.getElementById("action"),
+  status: document.getElementById("status"),
+  network: document.getElementById("network"),
+  txHash: document.getElementById("txHash"),
   wallet: document.getElementById("wallet"),
   details: document.getElementById("details"),
   proof: document.getElementById("proof")
@@ -26,6 +30,10 @@ form.addEventListener("submit", (e) => {
     id: crypto.randomUUID(),
     date: fields.date.value,
     category: fields.category.value,
+    action: fields.action.value,
+    status: fields.status.value,
+    network: fields.network.value.trim(),
+    txHash: fields.txHash.value.trim(),
     wallet: fields.wallet.value.trim(),
     details: fields.details.value.trim(),
     proof: fields.proof.value.trim(),
@@ -36,6 +44,8 @@ form.addEventListener("submit", (e) => {
   saveEntries();
   form.reset();
   fields.date.value = new Date().toISOString().slice(0, 10);
+  fields.network.value = "Arc Testnet";
+  fields.status.value = "completed";
   render();
 });
 
@@ -109,26 +119,32 @@ function render() {
   }
 
   entriesEl.innerHTML = filtered
-    .map(
-      (entry) => `
+    .map((entry) => {
+      const txLine = entry.txHash
+        ? `<span>TX: ${shortHash(entry.txHash)}</span>`
+        : "";
+      const proofLine = entry.proof
+        ? `<a href="${escapeAttr(entry.proof)}" target="_blank" rel="noreferrer">Proof link</a>`
+        : "";
+
+      return `
         <article class="entry">
           <div class="entry-head">
-            <span class="badge">${entry.category}</span>
+            <span class="badge">${escapeHtml(entry.action || entry.category)}</span>
             <button class="delete-btn" data-id="${entry.id}">Delete</button>
           </div>
-          <p class="entry-text">${escapeHtml(entry.details)}</p>
+          <p class="entry-text">${escapeHtml(entry.details || "")}</p>
           <div class="entry-meta">
-            <span>${entry.date}</span>
-            <span>${shortWallet(entry.wallet)}</span>
-            ${
-              entry.proof
-                ? `<a href="${escapeAttr(entry.proof)}" target="_blank" rel="noreferrer">Proof link</a>`
-                : ""
-            }
+            <span>${escapeHtml(entry.date || "")}</span>
+            <span>${escapeHtml(entry.network || "Arc Testnet")}</span>
+            <span>${escapeHtml(entry.status || "completed")}</span>
+            <span>${shortWallet(entry.wallet || "")}</span>
+            ${txLine}
+            ${proofLine}
           </div>
         </article>
-      `
-    )
+      `;
+    })
     .join("");
 
   document.querySelectorAll(".delete-btn").forEach((button) => {
@@ -137,8 +153,15 @@ function render() {
 }
 
 function shortWallet(wallet) {
+  if (!wallet) return "";
   if (wallet.length < 12) return wallet;
   return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+}
+
+function shortHash(hash) {
+  if (!hash) return "";
+  if (hash.length < 14) return hash;
+  return `${hash.slice(0, 8)}...${hash.slice(-6)}`;
 }
 
 function escapeHtml(value) {
