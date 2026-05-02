@@ -8,6 +8,8 @@ const TX_HASH_RE = /^0x[a-fA-F0-9]{64}$/;
 
 const form = document.getElementById("entryForm");
 const addressForm = document.getElementById("addressForm");
+const workspaceForm = document.getElementById("workspaceForm");
+
 const entriesEl = document.getElementById("entries");
 const addressListEl = document.getElementById("addressList");
 
@@ -19,7 +21,6 @@ const importInput = document.getElementById("importInput");
 
 const workspaceSelect = document.getElementById("workspaceSelect");
 const newWorkspaceName = document.getElementById("newWorkspaceName");
-const addWorkspaceBtn = document.getElementById("addWorkspaceBtn");
 const deleteWorkspaceBtn = document.getElementById("deleteWorkspaceBtn");
 
 const filterCategory = document.getElementById("filterCategory");
@@ -62,7 +63,91 @@ const selectedEntryIds = new Set();
 let state = loadState();
 
 setDefaultEntryValues();
+resetAddressForm();
 render();
+
+workspaceForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const name = newWorkspaceName.value.trim();
+  if (!name) {
+    alert("Enter a workspace name.");
+    newWorkspaceName.focus();
+    return;
+  }
+
+  const workspace = {
+    id: crypto.randomUUID(),
+    name,
+    createdAt: Date.now()
+  };
+
+  state.workspaces.unshift(workspace);
+  state.currentWorkspaceId = workspace.id;
+  newWorkspaceName.value = "";
+  selectedEntryIds.clear();
+  saveState();
+  resetEntryForm();
+  resetAddressForm();
+  render();
+});
+
+workspaceSelect.addEventListener("change", () => {
+  state.currentWorkspaceId = workspaceSelect.value;
+  selectedEntryIds.clear();
+  saveState();
+  resetEntryForm();
+  resetAddressForm();
+  render();
+});
+
+deleteWorkspaceBtn.addEventListener("click", () => {
+  if (state.workspaces.length === 1) {
+    alert("At least one workspace must remain.");
+    return;
+  }
+
+  const workspace = getCurrentWorkspace();
+  if (!workspace) return;
+
+  if (!window.confirm(`Delete workspace "${workspace.name}" and all its data?`)) {
+    return;
+  }
+
+  state.workspaces = state.workspaces.filter((item) => item.id !== workspace.id);
+  state.entries = state.entries.filter((item) => item.workspaceId !== workspace.id);
+  state.addressBook = state.addressBook.filter((item) => item.workspaceId !== workspace.id);
+  state.currentWorkspaceId = state.workspaces[0].id;
+  selectedEntryIds.clear();
+  saveState();
+  resetEntryForm();
+  resetAddressForm();
+  render();
+});
+
+addressForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const item = {
+    id: addressFields.editId.value || crypto.randomUUID(),
+    workspaceId: state.currentWorkspaceId,
+    label: addressFields.label.value.trim(),
+    address: addressFields.address.value.trim(),
+    network: addressFields.network.value.trim(),
+    notes: addressFields.notes.value.trim(),
+    createdAt: addressFields.editId.value ? getAddressCreatedAt(addressFields.editId.value) : Date.now()
+  };
+
+  if (addressFields.editId.value) {
+    state.addressBook = state.addressBook.map((entry) => (entry.id === item.id ? item : entry));
+  } else {
+    state.addressBook.unshift(item);
+  }
+
+  saveState();
+  resetAddressForm();
+  render();
+});
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -100,80 +185,6 @@ form.addEventListener("submit", (e) => {
   render();
 });
 
-addressForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const item = {
-    id: addressFields.editId.value || crypto.randomUUID(),
-    workspaceId: state.currentWorkspaceId,
-    label: addressFields.label.value.trim(),
-    address: addressFields.address.value.trim(),
-    network: addressFields.network.value.trim(),
-    notes: addressFields.notes.value.trim(),
-    createdAt: addressFields.editId.value ? getAddressCreatedAt(addressFields.editId.value) : Date.now()
-  };
-
-  if (addressFields.editId.value) {
-    state.addressBook = state.addressBook.map((entry) => (entry.id === item.id ? item : entry));
-  } else {
-    state.addressBook.unshift(item);
-  }
-
-  saveState();
-  resetAddressForm();
-  render();
-});
-
-workspaceSelect.addEventListener("change", () => {
-  state.currentWorkspaceId = workspaceSelect.value;
-  selectedEntryIds.clear();
-  saveState();
-  resetEntryForm();
-  resetAddressForm();
-  render();
-});
-
-addWorkspaceBtn.addEventListener("click", () => {
-  const name = newWorkspaceName.value.trim();
-  if (!name) return;
-
-  const workspace = {
-    id: crypto.randomUUID(),
-    name,
-    createdAt: Date.now()
-  };
-
-  state.workspaces.unshift(workspace);
-  state.currentWorkspaceId = workspace.id;
-  newWorkspaceName.value = "";
-  selectedEntryIds.clear();
-  saveState();
-  render();
-});
-
-deleteWorkspaceBtn.addEventListener("click", () => {
-  if (state.workspaces.length === 1) {
-    alert("At least one workspace must remain.");
-    return;
-  }
-
-  const workspace = getCurrentWorkspace();
-  if (!workspace) return;
-
-  const ok = window.confirm(`Delete workspace "${workspace.name}" and all its data?`);
-  if (!ok) return;
-
-  state.workspaces = state.workspaces.filter((item) => item.id !== workspace.id);
-  state.entries = state.entries.filter((item) => item.workspaceId !== workspace.id);
-  state.addressBook = state.addressBook.filter((item) => item.workspaceId !== workspace.id);
-  state.currentWorkspaceId = state.workspaces[0].id;
-  selectedEntryIds.clear();
-  saveState();
-  resetEntryForm();
-  resetAddressForm();
-  render();
-});
-
 fields.savedWallet.addEventListener("change", () => {
   const item = getCurrentAddresses().find((entry) => entry.id === fields.savedWallet.value);
   if (!item) return;
@@ -206,6 +217,7 @@ exportCsvBtn.addEventListener("click", () => {
 
 exportReportBtn.addEventListener("click", () => {
   const selected = getCurrentEntries().filter((entry) => selectedEntryIds.has(entry.id));
+
   if (!selected.length) {
     alert("Select at least one entry for the report.");
     return;
@@ -548,7 +560,7 @@ function renderAddressBook() {
             <span class="badge">${escapeHtml(item.label)}</span>
             <div class="hero-actions">
               <button class="edit-address-btn" type="button" data-id="${item.id}">Edit</button>
-              <button class="delete-btn" type="button" data-id="${item.id}">Delete</button>
+              <button class="delete-address-btn" type="button" data-id="${item.id}">Delete</button>
             </div>
           </div>
           <p class="entry-text">${escapeHtml(item.address)}</p>
@@ -565,9 +577,8 @@ function renderAddressBook() {
     button.addEventListener("click", () => startEditAddress(button.dataset.id));
   });
 
-  document.querySelectorAll(".delete-btn[data-id]").forEach((button) => {
-    if (button.classList.contains("entry-delete-bound")) return;
-    button.classList.add("entry-delete-bound");
+  document.querySelectorAll(".delete-address-btn").forEach((button) => {
+    button.addEventListener("click", () => deleteAddress(button.dataset.id));
   });
 }
 
@@ -583,7 +594,6 @@ function renderEntries() {
 
   if (!filtered.length) {
     entriesEl.innerHTML = '<div class="empty">No entries yet.</div>';
-    bindEntryButtons();
     return;
   }
 
@@ -631,10 +641,6 @@ function renderEntries() {
     })
     .join("");
 
-  bindEntryButtons();
-}
-
-function bindEntryButtons() {
   document.querySelectorAll(".delete-entry-btn").forEach((button) => {
     button.addEventListener("click", () => deleteEntry(button.dataset.id));
   });
@@ -647,12 +653,6 @@ function bindEntryButtons() {
     checkbox.addEventListener("change", () => {
       toggleSelected(checkbox.dataset.id, checkbox.checked);
     });
-  });
-
-  document.querySelectorAll(".delete-btn").forEach((button) => {
-    if (!button.classList.contains("delete-entry-btn")) {
-      button.addEventListener("click", () => deleteAddress(button.dataset.id));
-    }
   });
 }
 
@@ -693,17 +693,19 @@ function getAddressLabel(wallet) {
 
 function buildMarkdownReport(list) {
   const workspace = getCurrentWorkspace();
+  const sorted = [...list].sort((a, b) => new Date(a.date) - new Date(b.date));
+
   const lines = [
     `# ${workspace.name} Activity Report`,
     "",
     `Generated: ${new Date().toISOString()}`,
-    `Entries: ${list.length}`,
+    `Entries: ${sorted.length}`,
     "",
     "## Entries",
     ""
   ];
 
-  for (const entry of list.sort((a, b) => new Date(a.date) - new Date(b.date))) {
+  for (const entry of sorted) {
     lines.push(`### ${entry.date} - ${entry.action}`);
     lines.push(`- Category: ${entry.category}`);
     lines.push(`- Status: ${entry.status}`);
@@ -752,7 +754,10 @@ function shortHash(hash) {
 }
 
 function slugify(value) {
-  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workspace";
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "workspace";
 }
 
 function downloadFile(name, content, type) {
