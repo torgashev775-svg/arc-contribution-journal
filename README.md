@@ -4,10 +4,10 @@ Arc Contribution Journal is a local-first tool for documenting Arc Testnet activ
 
 It helps organize wallet-related actions, explorer links, transaction references, and session notes in one place, with export options for JSON, CSV, and Markdown.
 
-## Live Demo
+##  Live Demo
 https://torgashev775-svg.github.io/arc-contribution-journal/
 
-## Repository
+##  Repository
 https://github.com/torgashev775-svg/arc-contribution-journal
 
 ## Use Cases
