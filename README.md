@@ -7,7 +7,7 @@ It helps organize wallet-related actions, explorer links, transaction references
 ##  Live Demo
 https://torgashev775-svg.github.io/arc-contribution-journal/
 
-##  Repository
+## Repository
 https://github.com/torgashev775-svg/arc-contribution-journal
 
 ## Use Cases
