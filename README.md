@@ -1,4 +1,4 @@
-#  Arc Contribution Journal
+#   Arc Contribution Journal
 
 Arc Contribution Journal is a local-first tool for documenting Arc Testnet activity, validation runs, and proof-based reports.
 
